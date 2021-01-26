@@ -1,0 +1,54 @@
+{
+  "name": "teacher-admin",
+  "version": "0.0.1",
+  "author": "Wong Jiang Fung <kakarukeys@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kakarukeys/teacher-admin.git"
+  },
+  "homepage": "https://github.com/kakarukeys/teacher-admin#readme",
+  "bugs": {
+    "url": "https://github.com/kakarukeys/teacher-admin/issues"
+  },
+  "scripts": {
+    "start": "npm run nodemon",
+    "dev": "cross-env NODE_ENV=development node ./api/api.js",
+    "nodemon": "nodemon --exec npm run dev",
+    "lint": "eslint ./api/. ./config/. ./test/.",
+    "prepush": "npm test",
+    "pretest": "npm run lint",
+    "production": "cross-env NODE_ENV=production node ./api/api.js",
+    "test": "cross-env NODE_ENV=testing jest --coverage",
+    "test-ci": "jest --coverage --forceExit"
+  },
+  "jest": {
+    "globals": {
+      "__DEV__": true
+    },
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  },
+  "dependencies": {
+    "core-js": "^2.6.9",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-routes-mapper": "^1.1.0",
+    "helmet": "^4.4.1",
+    "sequelize": "^6.4.0",
+    "mysql2": "^2.2.5"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "eslint": "^7.18.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "husky": "^4.3.8",
+    "jest": "^26.6.3",
+    "nodemon": "^2.0.7",
+    "shx": "^0.3.3",
+    "supertest": "^6.1.2"
+  }
+}
