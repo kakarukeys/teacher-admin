@@ -1,21 +1,22 @@
+const { wrapRoute } = require('./asyncError')
 const { Teacher } = require('../models/Teacher');
 
 const TeacherController = () => {
-  const register = async (req, res) => {
+  const register = wrapRoute(async (req, res) => {
     res.status(200).json({ pong: true });
-  };
+  });
 
-  const commonStudents = async (req, res) => {
+  const commonStudents = wrapRoute(async (req, res) => {
     res.status(200).json({ pong: true });
-  };
+  });
 
-  const suspend = async (req, res) => {
+  const suspend = wrapRoute(async (req, res) => {
     res.status(200).json({ pong: true });
-  };
+  });
 
-  const retrieveForNotifications = async (req, res) => {
+  const retrieveForNotifications = wrapRoute(async (req, res) => {
     res.status(200).json({ pong: true });
-  };
+  });
 
   return {
     register,

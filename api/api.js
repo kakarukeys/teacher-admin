@@ -49,11 +49,20 @@ app.get('*', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  if (err.type === 'entity.parse.failed') {
-    res.status(err.status).send({ message: 'JSON parsing error' });
-  } else {
-    next(err);
+  if (res.headersSent) {
+    return next(err);
   }
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(err.status).send({ message: 'JSON parsing error' });
+  }
+
+  if (!err.status) {
+    console.error(err);
+    return res.status(500).send({ message: 'Internal server error' });
+  }
+
+  return next(err);
 });
 
 server.listen(config.port, () => {
