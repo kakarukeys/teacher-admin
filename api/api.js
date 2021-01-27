@@ -37,7 +37,7 @@ app.use(helmet({
 }));
 
 // fill routes for express application
-app.use('/public', mappedOpenRoutes);
+app.use('/api', mappedOpenRoutes);
 app.use('/private', mappedAuthRoutes);
 
 server.listen(config.port, () => {

@@ -1,3 +1,5 @@
-const publicRoutes = {};
+const publicRoutes = {
+  'GET /ping': 'PingController.ping',
+};
 
 module.exports = publicRoutes;

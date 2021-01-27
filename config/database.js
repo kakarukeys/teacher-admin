@@ -7,11 +7,7 @@ let database;
 switch (process.env.NODE_ENV) {
   case 'production':
     database = new Sequelize(
-      connection.production.database,
-      connection.production.username,
-      connection.production.password, {
-        host: connection.production.host,
-        dialect: connection.production.dialect,
+      process.env[connection.production.use_env_variable], {
         pool: {
           max: 5,
           min: 0,

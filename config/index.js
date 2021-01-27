@@ -5,7 +5,7 @@ const config = {
   migrate: false,
   privateRoutes,
   publicRoutes,
-  port: process.env.PORT || '2017',
+  port: process.env.NODE_ENV === 'production' ? 80 : 8000,
 };
 
 module.exports = config;
