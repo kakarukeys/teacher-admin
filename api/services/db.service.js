@@ -1,6 +1,6 @@
 const database = require('../../config/database');
 
-const dbService = (environment, migrate) => {
+const dbService = (environment) => {
   const authenticateDB = () => database.authenticate();
 
   const dropDB = () => database.drop();
@@ -20,15 +20,6 @@ const dbService = (environment, migrate) => {
     return process.exit(1);
   };
 
-  const startMigrateTrue = async () => {
-    try {
-      await syncDB();
-      successfulDBStart();
-    } catch (err) {
-      errorDBStart(err);
-    }
-  };
-
   const startMigrateFalse = async () => {
     try {
       await dropDB();
@@ -42,28 +33,18 @@ const dbService = (environment, migrate) => {
   const startDev = async () => {
     try {
       await authenticateDB();
-
-      if (migrate) {
-        return startMigrateTrue();
-      }
-
-      return startMigrateFalse();
+      successfulDBStart();
     } catch (err) {
-      return errorDBStart(err);
+      errorDBStart(err);
     }
   };
 
   const startStage = async () => {
     try {
       await authenticateDB();
-
-      if (migrate) {
-        return startMigrateTrue();
-      }
-
-      return startMigrateFalse();
+      successfulDBStart();
     } catch (err) {
-      return errorDBStart(err);
+      errorDBStart(err);
     }
   };
 
@@ -79,7 +60,7 @@ const dbService = (environment, migrate) => {
   const startProd = async () => {
     try {
       await authenticateDB();
-      await startMigrateFalse();
+      successfulDBStart();
     } catch (err) {
       errorDBStart(err);
     }

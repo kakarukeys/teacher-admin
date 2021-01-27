@@ -23,7 +23,7 @@ const app = express();
 const server = http.Server(app);
 const mappedOpenRoutes = mapRoutes(config.publicRoutes, 'api/controllers/');
 const mappedAuthRoutes = mapRoutes(config.privateRoutes, 'api/controllers/');
-const DB = dbService(environment, config.migrate).start();
+const DB = dbService(environment).start();
 
 // allow cross origin requests
 // configure to only allow requests from certain origins
