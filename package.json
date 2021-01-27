@@ -42,10 +42,10 @@
     "express-routes-mapper": "^1.1.0",
     "helmet": "^4.4.1",
     "mysql2": "^2.2.5",
-    "sequelize": "^6.4.0"
+    "sequelize": "^6.4.0",
+    "cross-env": "^7.0.3"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
     "eslint": "^7.18.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
