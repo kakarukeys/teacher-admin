@@ -40,12 +40,12 @@ module.exports = {
         TeacherId: {
           allowNull: false,
           type: Sequelize.INTEGER,
-          references: { model: 'Teacher', key: 'id' },
+          references: { model: 'Teachers', key: 'id' },
         },
         StudentId: {
           allowNull: false,
           type: Sequelize.INTEGER,
-          references: { model: 'Student', key: 'id' },
+          references: { model: 'Students', key: 'id' },
         },
       }, {
         uniqueKeys: {
