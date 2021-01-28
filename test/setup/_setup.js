@@ -9,10 +9,16 @@ const beforeAction = async () => {
   const mappedOpenRoutes = mapRoutes(config.publicRoutes, 'api/controllers/');
   const mappedAuthRoutes = mapRoutes(config.privateRoutes, 'api/controllers/');
 
+  testapp.use(express.json());
   testapp.use('/public', mappedOpenRoutes);
-  testapp.use('/private', mappedAuthRoutes);
+  testapp.use('/api', mappedAuthRoutes);
 
   await database.authenticate();
+
+  if (!database.config.database.startsWith('test')) {
+    throw new Error('not using test database');
+  }
+
   await database.drop();
   await database.sync().then(() => console.log('Connection to the database has been established successfully'));
 
