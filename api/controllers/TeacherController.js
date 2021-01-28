@@ -9,7 +9,8 @@ const { wrapRoute } = require('./asyncError');
 
 const parseNotificationEmails = (notiff) => {
   /* return an array of mentioned emails in a notification */
-  const mentions = _.rest(notiff.split(' @'));
+  let mentions = _.rest(notiff.split(/\s@/));
+  mentions = _.invoke(mentions, 'trimEnd');
   return _.filter(mentions, (m) => validator.isEmail(m));
 };
 
