@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
-
 const sequelize = require('../../config/database');
+
+/* Teacher administration models  */
 
 const Teacher = sequelize.define('Teacher', {
   email: {
@@ -20,6 +21,7 @@ const Student = sequelize.define('Student', {
   },
 }, { timestamps: false });
 
+// many-2-many relation
 const TeacherStudent = sequelize.define('TeacherStudent', {
 }, { timestamps: false });
 

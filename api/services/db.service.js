@@ -1,10 +1,13 @@
 const database = require('../../config/database');
 
+/* database access logic */
+
 const dbService = (environment) => {
   const authenticateDB = () => database.authenticate();
 
   const dropDB = () => database.drop();
 
+  // create new tables from new models
   const syncDB = () => database.sync();
 
   const successfulDBStart = () => (

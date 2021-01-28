@@ -1,6 +1,7 @@
 const wrapRoute = (fn) => async (req, res, next) => {
+  /* wrap an async handler so that we can handle uncaught exception */
   try {
-    // run controllers logic
+    // run handler's logic
     await fn(req, res, next);
   } catch (err) {
     // if an exception is raised, do not send any response

@@ -49,6 +49,7 @@ app.get('*', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  // if headers already sent, should not handle the error
   if (res.headersSent) {
     return next(err);
   }

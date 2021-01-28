@@ -21,6 +21,7 @@ beforeEach(async () => {
 
 describe('teacher | register', async () => {
   beforeEach(async () => {
+    /* test fixture */
     await Teacher.bulkCreate([
       { email: 'benleong@hotmail.com' },
     ]);

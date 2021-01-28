@@ -1,9 +1,11 @@
 const _ = require('underscore');
 const { body, query, validationResult } = require('express-validator');
 
+// create a line message from express validator's error object
 const genErrMsg = (errors) => _.map(errors.array(), ({ msg, param, location }) => `${msg} for ${param} in ${location}`).join(', ');
 
 const validationResultHandler = (req, res, next) => {
+  /* handle validation error by sending appropriate response */
   const errors = validationResult(req);
 
   if (errors.isEmpty()) {

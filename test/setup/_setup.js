@@ -13,12 +13,14 @@ const beforeAction = async () => {
   testapp.use('/public', mappedOpenRoutes);
   testapp.use('/api', mappedAuthRoutes);
 
+  // connecting to test database
   await database.authenticate();
 
   if (!database.config.database.startsWith('test')) {
     throw new Error('not using test database');
   }
 
+  // recreate all tables
   await database.drop();
   await database.sync().then(() => console.log('Connection to the database has been established successfully'));
 
