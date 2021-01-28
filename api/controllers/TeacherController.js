@@ -1,7 +1,10 @@
 const _ = require('underscore');
-const { Sequelize } = require('sequelize');
-const { wrapRoute } = require('./asyncError');
+const { Sequelize, QueryTypes } = require('sequelize');
+const querystring = require('querystring');
+
 const { Teacher, Student, TeacherStudent } = require('../models/Teacher');
+const sequelize = require('../../config/database');
+const { wrapRoute } = require('./asyncError');
 
 const TeacherController = () => {
   /* Teacher Administration API */
@@ -41,7 +44,27 @@ const TeacherController = () => {
   });
 
   const commonStudents = wrapRoute(async (req, res) => {
-    res.status(200).json({ pong: true });
+    /* return common students under teachers */
+
+    // WORKAROUND, express.js won't collect values of same query param,
+    // unless we follow their format: teacher[]=....&teacher[]=....
+    // but we have our own format, so parse the query string again
+    const query = querystring.parse(req._parsedUrl.query); // eslint-disable-line
+    const teacherEmails = query.teacher;
+
+    // get teacher ids from emails
+    const { count, rows: teachers } = await Teacher.findAndCountAll({ attribute: ['id'], where: { email: teacherEmails } });
+
+    // Derek's query for relation division
+    // https://stackoverflow.com/a/7774879
+    const whereClause = _.times(count, () => 's.id IN (SELECT StudentId FROM TeacherStudents WHERE TeacherId = ?)').join(' AND ');
+
+    const students = await sequelize.query(`SELECT s.email FROM Students s WHERE ${whereClause} ORDER BY s.email`, {
+      replacements: _.pluck(teachers, 'id'),
+      type: QueryTypes.SELECT,
+    });
+
+    res.status(200).json({ students: _.pluck(students, 'email') });
   });
 
   const suspend = wrapRoute(async (req, res) => {
