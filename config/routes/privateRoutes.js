@@ -36,7 +36,7 @@ const privateRoutes = {
   'POST /suspend': {
     path: 'TeacherController.suspend',
     middlewares: [
-      body('email').isEmail().normalizeEmail(),
+      body('student').isEmail().normalizeEmail(),
       validationResultHandler,
     ],
   },

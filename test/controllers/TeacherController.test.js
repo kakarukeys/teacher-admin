@@ -6,6 +6,12 @@ const { Teacher, Student, TeacherStudent } = require('../../api/models/Teacher')
 
 let api;
 
+const clearData = async () => {
+  await TeacherStudent.destroy({ truncate: true });
+  await Teacher.destroy({ where: {} });
+  await Student.destroy({ where: {} });
+};
+
 beforeAll(async () => {
   api = await beforeAction();
 });
@@ -14,14 +20,10 @@ afterAll(() => {
   afterAction();
 });
 
-beforeEach(async () => {
-  await TeacherStudent.destroy({ truncate: true });
-  await Teacher.destroy({ where: {} });
-  await Student.destroy({ where: {} });
-});
+describe('teacher | register', async () => {
+  beforeAll(async () => {
+    await clearData();
 
-describe('teacher | register', () => {
-  beforeEach(async () => {
     /* test fixture */
     await Teacher.bulkCreate([
       { email: 'benleong@hotmail.com' },
@@ -90,8 +92,10 @@ describe('teacher | register', () => {
   });
 });
 
-describe('teacher | commonStudents', () => {
-  beforeEach(async () => {
+describe('teacher | commonStudents', async () => {
+  beforeAll(async () => {
+    await clearData();
+
     /* test fixture */
     const teachers = await Promise.all(_.map([
       { email: 'benleong@hotmail.com' },
@@ -172,6 +176,111 @@ describe('teacher | commonStudents', () => {
 
     expect(res.body).toStrictEqual({
       students: [],
+    });
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('teacher | suspend', async () => {
+  beforeAll(async () => {
+    await clearData();
+
+    /* test fixture */
+    Student.bulkCreate([
+      { email: 'bob@gmail.com' },
+      { email: 'jane@gmail.com' },
+    ]);
+  });
+
+  test('invalid student', async () => {
+    const res = await request(api)
+      .post('/api/suspend')
+      .send({ student: 'invalid@gmail.com' })
+      .set('Content-Type', 'application/json');
+
+    expect(res.body.message).toContain('student email is not registered');
+    expect(res.status).toBe(400);
+
+    const totalSuspended = await Student.count({ where: { suspended: true } });
+    expect(totalSuspended).toBe(0);
+  });
+
+  test('suspend bob', async () => {
+    const res = await request(api)
+      .post('/api/suspend')
+      .send({ student: 'bob@gmail.com' })
+      .set('Content-Type', 'application/json');
+
+    expect(res.status).toBe(204);
+
+    const { count: totalSuspended, rows: students } = await Student
+      .findAndCountAll({ where: { suspended: true } });
+
+    expect(totalSuspended).toBe(1);
+    expect(students[0].email).toBe('bob@gmail.com');
+  });
+});
+
+describe('teacher | retrieveForNotifications', async () => {
+  beforeAll(async () => {
+    await clearData();
+
+    /* test fixture */
+    const teachers = await Promise.all(_.map([
+      { email: 'benleong@hotmail.com' },
+      { email: 'ken@hotmail.com' },
+      { email: 'ryu@hotmail.com' },
+    ], (d) => Teacher.create(d)));
+
+    const students = await Promise.all(_.map([
+      { email: 'bob@gmail.com' },
+      { email: 'jane@gmail.com', suspended: true },
+      { email: 'eric@gmail.com' },
+      { email: 'nancy@gmail.com', suspended: true },
+      { email: 'tracy@gmail.com' },
+      { email: 'miko@gmail.com' },
+    ], (d) => Student.create(d)));
+
+    await TeacherStudent.bulkCreate([
+      { TeacherId: teachers[0].id, StudentId: students[0].id },
+      { TeacherId: teachers[0].id, StudentId: students[1].id },
+      { TeacherId: teachers[0].id, StudentId: students[2].id },
+      { TeacherId: teachers[1].id, StudentId: students[1].id },
+      { TeacherId: teachers[1].id, StudentId: students[2].id },
+      { TeacherId: teachers[1].id, StudentId: students[3].id },
+      { TeacherId: teachers[2].id, StudentId: students[4].id },
+    ]);
+  });
+
+  test('invalid teacher', async () => {
+    const res = await request(api)
+      .post('/api/retrievefornotifications')
+      .send({
+        teacher: 'invalid@hotmail.com',
+        notification: '... hello ... @bob@gmail.com @jane@gmail.com @nancy@gmail.com @tracy@gmail.com @moko@gmail.com @miko@gmail.com',
+      })
+      .set('Content-Type', 'application/json');
+
+    expect(res.body).toStrictEqual({ message: 'teacher email is not registered' });
+    expect(res.status).toBe(400);
+  });
+
+  test('retrieve for notifications', async () => {
+    const res = await request(api)
+      .post('/api/retrievefornotifications')
+      .send({
+        teacher: 'benleong@hotmail.com',
+        notification: '... hello ... @bob@gmail.com @nancy@gmail.com @tracy@gmail.com @moko@gmail.com @miko@gmail.com',
+      })
+      .set('Content-Type', 'application/json');
+
+    expect(res.body).toStrictEqual({
+      recipients: [
+        'bob@gmail.com',
+        'eric@gmail.com',
+        'miko@gmail.com',
+        'tracy@gmail.com',
+      ],
     });
     expect(res.status).toBe(200);
   });

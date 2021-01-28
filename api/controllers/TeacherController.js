@@ -1,46 +1,55 @@
 const _ = require('underscore');
-const { Sequelize, QueryTypes } = require('sequelize');
+const validator = require('validator');
+const { QueryTypes } = require('sequelize');
 const querystring = require('querystring');
 
 const { Teacher, Student, TeacherStudent } = require('../models/Teacher');
 const sequelize = require('../../config/database');
 const { wrapRoute } = require('./asyncError');
 
+const parseNotificationEmails = (notiff) => {
+  /* return an array of mentioned emails in a notification */
+  const mentions = _.rest(notiff.split(' @'));
+  return _.filter(mentions, (m) => validator.isEmail(m));
+};
+
 const TeacherController = () => {
   /* Teacher Administration API */
 
-  const register = wrapRoute(async (req, res, next) => {
+  const register = wrapRoute(async (req, res) => {
     /* register students under a teacher */
     const teacherEmail = req.body.teacher;
     const studentEmails = req.body.students;
 
-    // get teacher id from email
-    const teacher = await Teacher.findOne({ attribute: ['id'], where: { email: teacherEmail } });
+    await sequelize.transaction(async (t) => {
+      // get teacher id from email
+      const teacher = await Teacher.findOne({
+        attribute: ['id'],
+        where: { email: teacherEmail },
+        transaction: t,
+      });
 
-    if (_.isNull(teacher)) {
-      return res.status(400).json({ message: 'teacher email is not registered' });
-    }
-
-    // get student ids from emails
-    const { count, rows: students } = await Student.findAndCountAll({ attribute: ['id', 'email'], where: { email: studentEmails } });
-
-    if (count !== studentEmails.length) {
-      const missing = _.difference(studentEmails, _.pluck(students, 'email')).join(', ');
-      return res.status(400).json({ message: `some student emails are not registered: ${missing}` });
-    }
-
-    // insert teacher-student relations
-    try {
-      const newRecords = _.map(students, ({ id }) => ({ TeacherId: teacher.id, StudentId: id }));
-      await TeacherStudent.bulkCreate(newRecords);
-    } catch (err) { // handle race condition (rare)
-      if (!(err instanceof Sequelize.ForeignKeyConstraintError)) {
-        return res.status(400).json({ message: 'some emails are being deregistered' });
+      if (_.isNull(teacher)) {
+        return res.status(400).json({ message: 'teacher email is not registered' });
       }
-      return next(err);
-    }
 
-    return res.status(204).send();
+      // get student ids from emails
+      const { count, rows: students } = await Student.findAndCountAll({
+        attribute: ['id', 'email'],
+        where: { email: studentEmails },
+        transaction: t,
+      });
+
+      if (count !== studentEmails.length) {
+        const missing = _.difference(studentEmails, _.pluck(students, 'email')).join(', ');
+        return res.status(400).json({ message: `some student emails are not registered: ${missing}` });
+      }
+
+      // insert teacher-student relations
+      const newRecords = _.map(students, ({ id }) => ({ TeacherId: teacher.id, StudentId: id }));
+      await TeacherStudent.bulkCreate(newRecords, { transaction: t });
+      return res.status(204).send();
+    });
   });
 
   const commonStudents = wrapRoute(async (req, res) => {
@@ -55,7 +64,7 @@ const TeacherController = () => {
     // get teacher ids from emails
     const { count, rows: teachers } = await Teacher.findAndCountAll({ attribute: ['id'], where: { email: teacherEmails } });
 
-    // Derek's query for relation division
+    // Derek's query for relational division
     // https://stackoverflow.com/a/7774879
     const whereClause = _.times(count, () => 's.id IN (SELECT StudentId FROM TeacherStudents WHERE TeacherId = ?)').join(' AND ');
 
@@ -68,11 +77,66 @@ const TeacherController = () => {
   });
 
   const suspend = wrapRoute(async (req, res) => {
-    res.status(200).json({ pong: true });
+    /* suspend a student */
+    const studentEmail = req.body.student;
+
+    // get student id from email
+    const student = await Student.findOne({ attribute: ['id', 'suspended'], where: { email: studentEmail } });
+
+    if (_.isNull(student)) {
+      return res.status(400).json({ message: 'student email is not registered' });
+    }
+
+    if (!student.suspended) {
+      student.suspended = true;
+      await student.save();
+    }
+
+    return res.status(204).send();
   });
 
   const retrieveForNotifications = wrapRoute(async (req, res) => {
-    res.status(200).json({ pong: true });
+    /* return a list of students who can receive a notification */
+    const teacherEmail = req.body.teacher;
+    const notiff = req.body.notification;
+
+    await sequelize.transaction(async (t) => {
+      // get teacher id from email
+      const teacher = await Teacher.findOne({
+        attribute: ['id'],
+        where: { email: teacherEmail },
+        transaction: t,
+      });
+
+      if (_.isNull(teacher)) {
+        return res.status(400).json({ message: 'teacher email is not registered' });
+      }
+
+      const emails = parseNotificationEmails(notiff);
+
+      // MUST NOT be suspended,
+      // AND MUST fulfill AT LEAST ONE of the following:
+      //     is registered with the notiff's teacher (valid)
+      //     has been @mentioned in the notification
+      const students = await sequelize.query(`
+        SELECT s.email 
+        FROM Students s LEFT JOIN TeacherStudents ts ON
+          s.id = ts.StudentId
+        WHERE NOT s.suspended AND (
+          ts.TeacherId = :teacherId OR
+          s.email IN (:emails)
+        )
+        ORDER BY s.email`,
+      {
+        replacements: { teacherId: teacher.id, emails },
+        type: QueryTypes.SELECT,
+        transaction: t,
+      });
+
+      return res.status(200).json({
+        recipients: _.pluck(students, 'email'),
+      });
+    });
   });
 
   return {
