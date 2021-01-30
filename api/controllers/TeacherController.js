@@ -9,8 +9,8 @@ const { wrapRoute } = require('./asyncError');
 
 const parseNotificationEmails = (notiff) => {
   /* return an array of mentioned emails in a notification */
-  let mentions = _.rest(notiff.split(/\s@/));
-  mentions = _.invoke(mentions, 'trimEnd');
+  // [whitespace or beginning]@[EMAIL PATTERN][whitespace or end]
+  const mentions = notiff.match(/(?<=(^|\s)@)[^@\s]+@[^@\s]+(?=($|\s))/g);
   return _.filter(mentions, (m) => validator.isEmail(m));
 };
 
@@ -48,7 +48,7 @@ const TeacherController = () => {
 
       // insert teacher-student relations
       const newRecords = _.map(students, ({ id }) => ({ TeacherId: teacher.id, StudentId: id }));
-      await TeacherStudent.bulkCreate(newRecords, { transaction: t });
+      await TeacherStudent.bulkCreate(newRecords, { ignoreDuplicates: true, transaction: t });
       return res.status(204).send();
     });
   });

@@ -20,23 +20,27 @@ test('parseNotificationEmails', async () => {
   emails = parseNotificationEmails(notiff);
   expect(emails).toEqual(['jane@gmail.com']);
 
-  notiff = 'the quick @abc fox jumps @john@gmail.com @jane@gmail.com';
+  notiff = 'the quick @abc fox jumps @john@gmail.com world @jane@gmail.com';
   emails = parseNotificationEmails(notiff);
   expect(emails).toEqual(['john@gmail.com', 'jane@gmail.com']);
 
-  notiff = 'the quick @abc fox jumps   @john@gmail.com  @jane@gmail.com   ';
+  notiff = 'the quick @abc fox jumps   @john@gmail.com  world  @jane@gmail.com   ';
   emails = parseNotificationEmails(notiff);
   expect(emails).toEqual(['john@gmail.com', 'jane@gmail.com']);
 
-  notiff = 'the quick @abc fox jumps   @john@gmail.com  @jane@gmail.com   ';
+  notiff = 'the quick @abc fox jumps   @john@gmail.com  world  @jane@gmail.com   ';
   emails = parseNotificationEmails(notiff);
   expect(emails).toEqual(['john@gmail.com', 'jane@gmail.com']);
 
-  notiff = 'the quick @abc fox jumps @ jack@gmail.com  @john@gmail.com  @jane@gmail.com   ';
+  notiff = 'the quick @abc fox jumps @ jack@gmail.com  @john@gmail.com  world  @jane@gmail.com   ';
   emails = parseNotificationEmails(notiff);
   expect(emails).toEqual(['john@gmail.com', 'jane@gmail.com']);
 
-  notiff = 'the quick @abc fox jumps @ jack@gmail.com   \t@john@gmail.com  \t@jane@gmail.com   ';
+  notiff = 'the quick @abc fox jumps @ jack@gmail.com   \t@john@gmail.com  world  \t@jane@gmail.com   ';
   emails = parseNotificationEmails(notiff);
   expect(emails).toEqual(['john@gmail.com', 'jane@gmail.com']);
+
+  notiff = '@rin@hotmail.com the quick @abc fox jumps @ jack@gmail.com   \t@john@gmail.com  world  \t@jane@gmail.com   ';
+  emails = parseNotificationEmails(notiff);
+  expect(emails).toEqual(['rin@hotmail.com', 'john@gmail.com', 'jane@gmail.com']);
 });

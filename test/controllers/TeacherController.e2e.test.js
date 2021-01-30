@@ -20,7 +20,7 @@ afterAll(() => {
   afterAction();
 });
 
-describe('teacher | register', async () => {
+describe('teacher | register', () => {
   beforeAll(async () => {
     await clearData();
 
@@ -90,9 +90,27 @@ describe('teacher | register', async () => {
     const regs = await TeacherStudent.count();
     expect(regs).toBe(2);
   });
+
+  test('already registered', async () => {
+    const res = await request(api)
+      .post('/api/register')
+      .send({
+        teacher: 'benleong@hotmail.com',
+        students: [
+          'bob@gmail.com',
+          'jane@gmail.com',
+        ],
+      })
+      .set('Content-Type', 'application/json');
+
+    expect(res.status).toBe(204);
+
+    const regs = await TeacherStudent.count();
+    expect(regs).toBe(2);
+  });
 });
 
-describe('teacher | commonStudents', async () => {
+describe('teacher | commonStudents', () => {
   beforeAll(async () => {
     await clearData();
 
@@ -181,7 +199,7 @@ describe('teacher | commonStudents', async () => {
   });
 });
 
-describe('teacher | suspend', async () => {
+describe('teacher | suspend', () => {
   beforeAll(async () => {
     await clearData();
 
@@ -221,7 +239,7 @@ describe('teacher | suspend', async () => {
   });
 });
 
-describe('teacher | retrieveForNotifications', async () => {
+describe('teacher | retrieveForNotifications', () => {
   beforeAll(async () => {
     await clearData();
 
