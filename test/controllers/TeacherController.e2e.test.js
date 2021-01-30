@@ -74,7 +74,7 @@ describe('teacher | register', () => {
   });
 
   test('all entities exist', async () => {
-    const res = await request(api)
+    let res = await request(api)
       .post('/api/register')
       .send({
         teacher: 'benleong@hotmail.com',
@@ -87,12 +87,11 @@ describe('teacher | register', () => {
 
     expect(res.status).toBe(204);
 
-    const regs = await TeacherStudent.count();
+    let regs = await TeacherStudent.count();
     expect(regs).toBe(2);
-  });
 
-  test('already registered', async () => {
-    const res = await request(api)
+    // register again
+    res = await request(api)
       .post('/api/register')
       .send({
         teacher: 'benleong@hotmail.com',
@@ -105,7 +104,7 @@ describe('teacher | register', () => {
 
     expect(res.status).toBe(204);
 
-    const regs = await TeacherStudent.count();
+    regs = await TeacherStudent.count();
     expect(regs).toBe(2);
   });
 });
@@ -144,6 +143,14 @@ describe('teacher | commonStudents', () => {
     const res = await request(api)
       .get('/api/commonstudents?');
 
+    expect(res.status).toBe(400);
+  });
+
+  test('non-existing teacher', async () => {
+    const res = await request(api)
+      .get('/api/commonstudents?teacher=invalid@hotmail.com');
+
+    expect(res.body.message).toBe('at least one registered teacher email is required');
     expect(res.status).toBe(400);
   });
 

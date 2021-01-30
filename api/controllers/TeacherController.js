@@ -65,6 +65,10 @@ const TeacherController = () => {
     // get teacher ids from emails
     const { count, rows: teachers } = await Teacher.findAndCountAll({ attribute: ['id'], where: { email: teacherEmails } });
 
+    if (count === 0) {
+      return res.status(400).json({ message: 'at least one registered teacher email is required' });
+    }
+
     // Derek's query for relational division
     // https://stackoverflow.com/a/7774879
     const whereClause = _.times(count, () => 's.id IN (SELECT StudentId FROM TeacherStudents WHERE TeacherId = ?)').join(' AND ');
@@ -74,7 +78,7 @@ const TeacherController = () => {
       type: QueryTypes.SELECT,
     });
 
-    res.status(200).json({ students: _.pluck(students, 'email') });
+    return res.status(200).json({ students: _.pluck(students, 'email') });
   });
 
   const suspend = wrapRoute(async (req, res) => {
