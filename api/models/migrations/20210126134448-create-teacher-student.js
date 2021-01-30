@@ -15,7 +15,7 @@ module.exports = {
           allowNull: false,
           unique: true,
         },
-      });
+      }, { transaction });
 
       await queryInterface.createTable('Students', {
         id: {
@@ -32,9 +32,9 @@ module.exports = {
         suspended: {
           type: Sequelize.BOOLEAN,
           allowNull: false,
-          default: false,
+          defaultValue: false,
         },
-      });
+      }, { transaction });
 
       await queryInterface.createTable('TeacherStudents', {
         TeacherId: {
@@ -53,7 +53,7 @@ module.exports = {
             fields: ['TeacherId', 'StudentId'],
           },
         },
-      });
+      }, { transaction });
     } catch (err) {
       await transaction.rollback();
       throw err;
@@ -64,9 +64,9 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
 
     try {
-      await queryInterface.dropTable('Teacher');
-      await queryInterface.dropTable('Student');
-      await queryInterface.dropTable('TeacherStudent');
+      await queryInterface.dropTable('TeacherStudents', { transaction });
+      await queryInterface.dropTable('Teachers', { transaction });
+      await queryInterface.dropTable('Students', { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
