@@ -5,7 +5,6 @@ const express = require('express');
 const helmet = require('helmet');
 const http = require('http');
 const mapRoutes = require('express-routes-mapper');
-const cors = require('cors');
 
 /**
  * server configuration
@@ -27,10 +26,6 @@ const DB = dbService(environment).start();
 
 // use json in request body
 app.use(express.json());
-
-// allow cross origin requests
-// configure to only allow requests from certain origins
-app.use(cors());
 
 // secure express app
 app.use(helmet({

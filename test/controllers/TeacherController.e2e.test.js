@@ -300,6 +300,7 @@ describe('teacher controller', () => {
         })
         .set('Content-Type', 'application/json');
 
+      expect(res.status).toBe(200);
       expect(res.body).toStrictEqual({
         recipients: [
           'bob@gmail.com',
@@ -308,7 +309,19 @@ describe('teacher controller', () => {
           'tracy@gmail.com',
         ],
       });
+    });
+
+    test('retrieve for notifications (no email in mention)', async () => {
+      const res = await request(api)
+        .post('/api/retrievefornotifications')
+        .send({
+          teacher: 'ryu@hotmail.com',
+          notification: '... hello ...',
+        })
+        .set('Content-Type', 'application/json');
+
       expect(res.status).toBe(200);
+      expect(res.body).toStrictEqual({ recipients: ['tracy@gmail.com'] });
     });
   });
 });

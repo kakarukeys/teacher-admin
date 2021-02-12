@@ -119,24 +119,33 @@ const TeacherController = () => {
 
       const emails = parseNotificationEmails(notiff);
 
+      let emailClause;
+      const replacements = { teacherId: teacher.id };
+
+      if (_.isEmpty(emails)) {
+        emailClause = '';
+      } else {
+        emailClause = 'OR s.email IN (:emails)';
+        replacements.emails = emails;
+      }
+
       // MUST NOT be suspended,
       // AND MUST fulfill AT LEAST ONE of the following:
       //     is registered with the notiff's teacher (valid)
       //     has been @mentioned in the notification
-      const students = await sequelize.query(`
-        SELECT s.email 
-        FROM Students s LEFT JOIN TeacherStudents ts ON
-          s.id = ts.StudentId
-        WHERE NOT s.suspended AND (
-          ts.TeacherId = :teacherId OR
-          s.email IN (:emails)
-        )
-        ORDER BY s.email`,
-      {
-        replacements: { teacherId: teacher.id, emails },
-        type: QueryTypes.SELECT,
-        transaction: t,
-      });
+      const query = `
+      SELECT s.email 
+      FROM Students s LEFT JOIN TeacherStudents ts ON
+        s.id = ts.StudentId
+      WHERE NOT s.suspended AND (
+        ts.TeacherId = :teacherId ${emailClause}
+      )
+      ORDER BY s.email`;
+
+      const students = await sequelize.query(
+        query,
+        { replacements, type: QueryTypes.SELECT, transaction: t },
+      );
 
       return res.status(200).json({
         recipients: _.pluck(students, 'email'),

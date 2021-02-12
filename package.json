@@ -36,7 +36,6 @@
   },
   "dependencies": {
     "core-js": "^2.6.9",
-    "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "express": "^4.17.1",
     "express-routes-mapper": "^1.1.0",
